@@ -1,12 +1,15 @@
-import { render, React$Elemnt } from '../lib/react';
+import { createElement } from '../lib/react';
+import { render } from '../lib/react/react-dom';
 
-const element:React$Elemnt = {
-  type: "h1",
-  props: {
-    title: "foo",
-    children: "Hello",
-  },
-}
+const element = createElement(
+  "div",
+  { id: "foo" },
+  'aaaaa',
+  createElement("div", null, "bar"),
+  createElement("span")
+)
+
+console.log(element)
 
 const container = document.getElementById("app")
 
