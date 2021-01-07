@@ -11,7 +11,7 @@ const config: webpack.Configuration = {
   },
   devtool: 'inline-source-map',
   devServer: {
-    contentBase: './dist',
+    contentBase: './public',
   },
   plugins: [
     new HtmlWebpackPlugin({
