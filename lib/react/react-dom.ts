@@ -3,12 +3,12 @@ import { React$Elemnt } from '.';
 let nextUnitOfWork;
 
 function wookLoop(){
-  while (nextUnitOfWork) {
+  if(nextUnitOfWork){
     nextUnitOfWork = performUnitOfWork(
       nextUnitOfWork
     )
+    window.requestIdleCallback(wookLoop)
   }
-  window.requestIdleCallback(wookLoop)
 }
 
 
@@ -17,7 +17,7 @@ function performUnitOfWork(fiber){
   if (!fiber.dom) fiber.dom = createDom(fiber)
 ​
   // 在生成fiber的同时插入dom
-  if (fiber.parent) fiber.parent.dom.appendChild(fiber.dom)
+  if (fiber.parent) fiber.parent.dom.append(fiber.dom)
 
   // 为children生成filber
   const elements = fiber.props.children
@@ -54,16 +54,16 @@ function performUnitOfWork(fiber){
     if (nextFiber.sibling) {
       return nextFiber.sibling
     }
-    if(!nextFiber.parent) console.log(nextFiber)
     nextFiber = nextFiber.parent
   }
 }
 
 function createDom(element:React$Elemnt){
-  if(typeof element === 'string') return element
+  if(element.type === 'TEXT_ELEMENT') return element.props.nodeValue
 
   const { type, props:{ children, ...props} } = element;
   const node = document.createElement(type);
+
   Object.keys(props).forEach(key => {
     node[key] = props[key]
   })
