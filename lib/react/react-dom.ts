@@ -1,7 +1,23 @@
 import { React$Elemnt } from '.';
 import { Fiber } from './react-reconciler';
 
+let wipRoot:Fiber;
 let nextUnitOfWork:Fiber;
+
+function commitWork(fiber:Fiber){
+  if (!fiber) {
+    return
+  }
+  const domParent = fiber.parent.dom
+  domParent.append(fiber.dom)
+  commitWork(fiber.child)
+  commitWork(fiber.sibling)
+}
+
+function commitRoot(){
+  commitWork(wipRoot.child)
+  wipRoot = null
+}
 
 function wookLoop(){
   if(nextUnitOfWork){
@@ -10,15 +26,15 @@ function wookLoop(){
     )
     window.requestIdleCallback(wookLoop)
   }
+  if(!nextUnitOfWork && wipRoot){
+    commitRoot()
+  }
 }
 
 
-function performUnitOfWork(fiber){
+function performUnitOfWork(fiber:Fiber){
   // add dom node
   if (!fiber.dom) fiber.dom = createDom(fiber)
-​
-  // 在生成fiber的同时插入dom
-  if (fiber.parent) fiber.parent.dom.append(fiber.dom)
 
   // 为children生成filber
   const elements = fiber.props.children
@@ -73,12 +89,13 @@ function createDom(element:React$Elemnt){
 }
 
 export function render(element:React$Elemnt, container: HTMLElement){
-  nextUnitOfWork = {
+  wipRoot = {
     dom: container,
     props: {
       children: [element]
     },
   }
+  nextUnitOfWork = wipRoot
   wookLoop()
 }
 

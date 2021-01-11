@@ -1,7 +1,7 @@
 export interface React$Elemnt {
   type?: string,
-  props?: {
-    children?: React$Elemnt[]
+  props: {
+    children: React$Elemnt[]
     [index:string]:any
   }
 }
