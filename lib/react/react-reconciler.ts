@@ -1,12 +1,7 @@
 import { React$Elemnt } from '.'
 
-export interface Fiber {
-  dom: HTMLElement
-  
-  type?: string
-  props:{
-    children: React$Elemnt[]
-  }
+export interface Fiber extends React$Elemnt{
+  dom?: HTMLElement
 
   parent?: Fiber
   child?: Fiber

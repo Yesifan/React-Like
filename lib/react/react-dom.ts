@@ -76,7 +76,7 @@ export function render(element:React$Elemnt, container: HTMLElement){
   nextUnitOfWork = {
     dom: container,
     props: {
-      children: [element],
+      children: [element]
     },
   }
   wookLoop()
