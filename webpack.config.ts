@@ -8,6 +8,7 @@ const config: webpack.Configuration = {
   devtool: 'inline-source-map',
   devServer: {
     contentBase: './public',
+    port: 8888
   },
   module: {
     rules: [
@@ -16,16 +17,6 @@ const config: webpack.Configuration = {
         use: 'ts-loader',
         exclude: /node_modules/,
       }
-      // {
-      //   test: /\.jsx?$/,
-      //   exclude: /(node_modules|bower_components)/,
-      //   use: {
-      //     loader: 'babel-loader',
-      //     options: {
-      //       plugins: ["@babel/plugin-syntax-jsx"]
-      //     }
-      //   }
-      // }
     ],
   },
   plugins: [

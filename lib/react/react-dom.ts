@@ -1,6 +1,7 @@
 import { React$Elemnt } from '.';
+import { Fiber } from './react-reconciler';
 
-let nextUnitOfWork;
+let nextUnitOfWork:Fiber;
 
 function wookLoop(){
   if(nextUnitOfWork){
