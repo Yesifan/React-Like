@@ -1,31 +1,82 @@
-import { React$Elemnt } from '.';
-import { performUnitOfWork, Fiber } from './react-reconciler';
+import { React$Elemnt } from '.'
+import { performUnitOfWork, Fiber } from './react-reconciler'
 
-let wipRoot:Fiber;
-let currentRoot:Fiber;
-let nextUnitOfWork:Fiber;
+let wipRoot:Fiber
+let currentRoot:Fiber
+let nextUnitOfWork:Fiber
 
-function createDom(element:React$Elemnt){
-  if(element.type === 'TEXT_ELEMENT') return element.props.nodeValue
+
+const isEvent = (key:string) => key.startsWith("on")
+const isProperty = (key:string) =>
+  key !== "children" && !isEvent(key)
+const isGone = (next:any) => (key:string) => !(key in next)
+const isNew = (prev:any, next:any) => (key:string) => prev[key] !== next[key]
+function updateDom(dom:HTMLElement|Text, prevProps:any, nextProps:any) {
+  //Remove old or changed event listeners
+  Object.keys(prevProps)
+  .filter(isEvent)
+  .filter(key => isGone(nextProps)(key)||isNew(prevProps, nextProps)(key))
+  .map(name => [name.toLowerCase().substring(2), prevProps[name]])
+  .forEach(([event, callback]) => dom.removeEventListener(event, callback))
+
+  // Add event listeners
+  Object.keys(nextProps)
+  .filter(isEvent)
+  .filter(isNew(prevProps, nextProps))
+  .map(name => [name.toLowerCase().substring(2), nextProps[name]])
+  .forEach(([event, callback]) => dom.addEventListener(event, callback))
+
+  // Remove old properties
+  Object.keys(prevProps)
+    .filter(isProperty)
+    .filter(isGone(nextProps))
+    .forEach(name => dom[name] = "")
+
+  // Set new or changed properties
+  Object.keys(nextProps)
+    .filter(isProperty)
+    .filter(isNew(prevProps, nextProps))
+    .forEach(name => dom[name] = nextProps[name])
+}
+
+function createDom(element:React$Elemnt):HTMLElement|Text{
+
 
   const { type, props:{ children, ...props} } = element;
-  const node = document.createElement(type);
+  const dom = type == "TEXT_ELEMENT"
+    ? document.createTextNode("")
+    : document.createElement(type)
 
-  Object.keys(props).forEach(key => {
-    node[key] = props[key]
-  })
+  updateDom(dom, {}, props)
 
-  return node
+  return dom
 }
 
 function commitWork(fiber:Fiber, parent:HTMLElement){
   if (!fiber) {
     return
   }
-  const dom = createDom(fiber)
-  parent.append(dom)
-  commitWork(fiber.child, dom)
-  commitWork(fiber.sibling, dom)
+  if (fiber.deletions) {
+    fiber.deletions.forEach(fiber => parent.removeChild(fiber.stateNode))
+  }
+  switch(fiber.effectTag){
+    case "PLACEMENT":
+      fiber.stateNode = createDom(fiber)
+      parent.append(fiber.stateNode)
+      break
+    case "UPDATE":
+      updateDom(
+        fiber.stateNode,
+        fiber.alternate.props,
+        fiber.props
+      )
+      break;
+    case "UPDATE":
+      break
+  }
+​
+  commitWork(fiber.child, fiber.stateNode as HTMLElement)
+  commitWork(fiber.sibling, parent)
 }
 
 function commitRoot(){
@@ -40,7 +91,7 @@ function wookLoop(){
     nextUnitOfWork = performUnitOfWork(
       nextUnitOfWork
     )
-    window.requestIdleCallback(wookLoop)
+    window.requestIdleCallback(wookLoop, { timeout: 1000/60 })
   }
   if(!nextUnitOfWork && wipRoot){
     commitRoot()

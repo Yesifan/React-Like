@@ -1,15 +1,18 @@
 import React from '../lib/react';
 import { render } from '../lib/react/react-dom';
 
-// 先处理子 没有子则处理兄弟 没有兄弟则返回父
-const element = <div className="root">
-  <h1>
-    <p>aaaaa</p>
-    <a />
-  </h1>
-  <h2 />
-</div>
-
 const container = document.getElementById("app")
 
-render(element, container)
+const updateValue = (e:any) => rerender(e.target.value)
+
+const rerender = (value?:string) => {
+  const element = (
+    <div>
+      <input onInput={updateValue} value={value} />
+      <h2>Hello {value}</h2>
+    </div>
+  )
+  render(element, container)
+}
+
+rerender("World")
