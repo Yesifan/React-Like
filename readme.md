@@ -1,4 +1,4 @@
-# React Like 1.0.0
+# React Like
 
 ## 简介
 
