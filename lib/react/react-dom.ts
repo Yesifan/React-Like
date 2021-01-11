@@ -40,8 +40,6 @@ function updateDom(dom:HTMLElement|Text, prevProps:any, nextProps:any) {
 }
 
 function createDom(element:React$Elemnt):HTMLElement|Text{
-
-
   const { type, props:{ children, ...props} } = element;
   const dom = type == "TEXT_ELEMENT"
     ? document.createTextNode("")
