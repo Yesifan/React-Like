@@ -28,7 +28,7 @@ interface Fiber {
 按着儿子，兄弟，叔叔(父亲的兄弟)的顺序使用`window.requestIdleCallback`API在游览器空闲的时候进行遍历。  
 ~~每次遍历处理一个元素的时候便会生成一个`DOM`，然后插入到文档中。因为遍历是使用`window.requestIdleCallback`API进行的，可能由于游览器在处理其他任务而被中断，导致用户看到不完整的UI。~~  
 将`performUnitOfWork`中的创建dom方法移除,并移到reconciler.js中。添加`commitWork`方法，在fiber树创建完成后，遍历fiber树，将dom绑定到`fiber.stateNode`,并添加到文档中。  
-从`performUnitOfWork`中摘出`performUnitOfWork`专门生成fiber树，并将旧fiber绑定到`fiber.alternate`（如果有）。然后根据更新类型在`fiber.effectTag`上进行标注。通过`commitWork`进行不同形式的更新。
+从`performUnitOfWork`中摘出`reconcileChildren`专门生成fiber树，并将旧fiber绑定到`fiber.alternate`（如果有）。然后根据更新类型在`fiber.effectTag`上进行标注。通过`commitWork`进行不同形式的更新。
 
 
 本库为了简单考虑，没有做任何性能上的优化。`Fiber`接口也是继承了`React$Elemnt`接口，以便于使用，使代码尽量简介易懂。
