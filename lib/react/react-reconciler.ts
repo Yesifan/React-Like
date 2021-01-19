@@ -19,8 +19,9 @@ export class Fiber {
     this.props = props
     if(type instanceof Function){
       const element = type(props)
-      this.type = element.type
-      this.props = element.props
+      const newFiber = new Fiber(element);
+      this.type = newFiber.type
+      this.props = newFiber.props
     }
   }
 }
