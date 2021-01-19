@@ -30,11 +30,13 @@ interface Fiber {
 将`performUnitOfWork`中的创建dom方法移除,并移到reconciler.js中。添加`commitWork`方法，在fiber树创建完成后，遍历fiber树，将dom绑定到`fiber.stateNode`,并添加到文档中。  
 从`performUnitOfWork`中摘出`reconcileChildren`专门生成fiber树，并将旧fiber绑定到`fiber.alternate`（如果有）。然后根据更新类型在`fiber.effectTag`上进行标注。通过`commitWork`进行不同形式的更新。
 
+`reconcileChildren`在生成`Fiber`时，若判断`type`是一个方法，则运行方法直到拿到真实dom的`type`去生成`fiber`。
+
 
 本库为了简单考虑，没有做任何性能上的优化。`Fiber`接口也是继承了`React$Elemnt`接口，以便于使用，使代码尽量简介易懂。
 
 ### 下一步
-Function Components
+Hooks
 
 
 ## 参考
