@@ -1,5 +1,6 @@
+type createElement = (props?:any) => React$Elemnt;
 export interface React$Elemnt {
-  type?: string,
+  type?: string|createElement,
   props: {
     children: React$Elemnt[]
     [index:string]:any
@@ -7,7 +8,7 @@ export interface React$Elemnt {
 }
 
 export function createElement(
-  type:string,
+  type:string|createElement,
   props?:any,
   ...children:React$Elemnt[]
 ): React$Elemnt{
@@ -22,7 +23,7 @@ export function createElement(
   }
 }
 
-function createTextElement(text) {
+function createTextElement(text:string) {
   return {
     type: "TEXT_ELEMENT",
     props: {

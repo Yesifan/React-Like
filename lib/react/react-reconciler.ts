@@ -13,7 +13,17 @@ export interface Fiber extends React$Elemnt{
   deletions?: Fiber[]
 }
 
-let workInProgress:Fiber
+export class Fiber {
+  constructor({type, props}:React$Elemnt){
+    this.type = type
+    this.props = props
+    if(type instanceof Function){
+      const element = type(props)
+      this.type = element.type
+      this.props = element.props
+    }
+  }
+}
 
 /**
  * 在wipFiber上生成新的fiber树
@@ -25,30 +35,21 @@ function reconcileChildren(fiber:Fiber){
   let oldFiber = fiber.alternate?.child
   const elements = fiber.props.children
 ​
+  // 为孩子生成fiber
   while (index < elements.length||oldFiber) {
-    let newFiber:Fiber;
-
     const element = elements[index]
+    const newFiber = new Fiber(element);
 
-    const sameType = element?.type === oldFiber?.type
+    const sameType = newFiber?.type === oldFiber?.type
     if (sameType) {
-      newFiber = {
-        type: element.type,
-        props: element.props,
-        parent: fiber,
-        stateNode: oldFiber.stateNode,
-        alternate: oldFiber,
-        effectTag: "UPDATE"
-      }
+      newFiber.parent = fiber
+      newFiber.alternate = oldFiber
+      newFiber.stateNode = oldFiber.stateNode
+      newFiber.effectTag = "UPDATE"
     }
     if (element && !sameType) {
-      newFiber = {
-        type: element.type,
-        props: element.props,
-        parent: fiber,
-        alternate: null,
-        effectTag: "PLACEMENT",
-      }
+      newFiber.parent = fiber
+      newFiber.effectTag = "PLACEMENT"
     }
     if (oldFiber && !sameType) {
       deleteChild(fiber, oldFiber)
@@ -67,7 +68,7 @@ function reconcileChildren(fiber:Fiber){
 
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber) {
     const deletions = returnFiber.deletions;
-    if (deletions === null) {
+    if (!deletions) {
       returnFiber.deletions = [childToDelete];
     } else {
       deletions.push(childToDelete);

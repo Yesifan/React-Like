@@ -5,13 +5,12 @@ let wipRoot:Fiber
 let currentRoot:Fiber
 let nextUnitOfWork:Fiber
 
-
 const isEvent = (key:string) => key.startsWith("on")
 const isProperty = (key:string) =>
   key !== "children" && !isEvent(key)
 const isGone = (next:any) => (key:string) => !(key in next)
 const isNew = (prev:any, next:any) => (key:string) => prev[key] !== next[key]
-function updateDom(dom:HTMLElement|Text, prevProps:any, nextProps:any) {
+function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
   //Remove old or changed event listeners
   Object.keys(prevProps)
   .filter(isEvent)
@@ -41,13 +40,12 @@ function updateDom(dom:HTMLElement|Text, prevProps:any, nextProps:any) {
 
 function createDom(element:React$Elemnt):HTMLElement|Text{
   const { type, props:{ children, ...props} } = element;
-  const dom = type == "TEXT_ELEMENT"
-    ? document.createTextNode("")
-    : document.createElement(type)
+    const dom = type == "TEXT_ELEMENT"
+      ? document.createTextNode("")
+      : document.createElement(type as string)
+    updateDom(dom, {}, props)
 
-  updateDom(dom, {}, props)
-
-  return dom
+    return dom
 }
 
 function commitWork(fiber:Fiber, parent:HTMLElement){
@@ -65,7 +63,7 @@ function commitWork(fiber:Fiber, parent:HTMLElement){
     case "UPDATE":
       updateDom(
         fiber.stateNode,
-        fiber.alternate.props,
+        fiber.alternate?.props,
         fiber.props
       )
       break;
