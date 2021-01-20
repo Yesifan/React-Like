@@ -1,4 +1,5 @@
 import { React$Elemnt } from '.'
+import { createDom, updateDom } from './react-dom'
 
 export interface Fiber extends React$Elemnt{
   containerInfo?: HTMLElement
@@ -93,4 +94,67 @@ export function performUnitOfWork(fiber:Fiber){
     }
     nextFiber = nextFiber.parent
   }
+}
+
+
+let wipRoot:Fiber
+let currentRoot:Fiber
+let nextUnitOfWork:Fiber
+function commitWork(fiber:Fiber, parent:HTMLElement){
+  if (!fiber) {
+    return
+  }
+  if (fiber.deletions) {
+    fiber.deletions.forEach(fiber => parent.removeChild(fiber.stateNode))
+  }
+  switch(fiber.effectTag){
+    case "PLACEMENT":
+      fiber.stateNode = createDom(fiber)
+      parent.append(fiber.stateNode)
+      break
+    case "UPDATE":
+      updateDom(
+        fiber.stateNode,
+        fiber.alternate?.props,
+        fiber.props
+      )
+      break;
+    case "UPDATE":
+      break
+  }
+​
+  commitWork(fiber.child, fiber.stateNode as HTMLElement)
+  commitWork(fiber.sibling, parent)
+}
+
+function commitRoot(){
+  commitWork(wipRoot.child, wipRoot.containerInfo)
+  currentRoot = wipRoot
+  wipRoot = null
+}
+
+
+function wookLoop(){
+  if(nextUnitOfWork){
+    nextUnitOfWork = performUnitOfWork(
+      nextUnitOfWork
+    )
+    window.requestIdleCallback(wookLoop, { timeout: 1000/60 })
+  }
+  if(!nextUnitOfWork && wipRoot){
+    commitRoot()
+  }
+}
+
+export function updateContainer(element:Fiber, container:HTMLElement){
+  wipRoot = {
+    containerInfo: container,
+    props: {
+      children: [element]
+    },
+    alternate: currentRoot //link old fiber
+  }
+  nextUnitOfWork = wipRoot
+
+  wookLoop()
 }

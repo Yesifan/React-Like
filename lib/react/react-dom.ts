@@ -1,16 +1,12 @@
 import { React$Elemnt } from '.'
-import { performUnitOfWork, Fiber } from './react-reconciler'
-
-let wipRoot:Fiber
-let currentRoot:Fiber
-let nextUnitOfWork:Fiber
+import { updateContainer } from './react-reconciler'
 
 const isEvent = (key:string) => key.startsWith("on")
 const isProperty = (key:string) =>
   key !== "children" && !isEvent(key)
 const isGone = (next:any) => (key:string) => !(key in next)
 const isNew = (prev:any, next:any) => (key:string) => prev[key] !== next[key]
-function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
+export function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
   //Remove old or changed event listeners
   Object.keys(prevProps)
   .filter(isEvent)
@@ -38,7 +34,7 @@ function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
     .forEach(name => dom[name] = nextProps[name])
 }
 
-function createDom(element:React$Elemnt):HTMLElement|Text{
+export function createDom(element:React$Elemnt):HTMLElement|Text{
   const { type, props:{ children, ...props} } = element;
     const dom = type == "TEXT_ELEMENT"
       ? document.createTextNode("")
@@ -48,62 +44,9 @@ function createDom(element:React$Elemnt):HTMLElement|Text{
     return dom
 }
 
-function commitWork(fiber:Fiber, parent:HTMLElement){
-  if (!fiber) {
-    return
-  }
-  if (fiber.deletions) {
-    fiber.deletions.forEach(fiber => parent.removeChild(fiber.stateNode))
-  }
-  switch(fiber.effectTag){
-    case "PLACEMENT":
-      fiber.stateNode = createDom(fiber)
-      parent.append(fiber.stateNode)
-      break
-    case "UPDATE":
-      updateDom(
-        fiber.stateNode,
-        fiber.alternate?.props,
-        fiber.props
-      )
-      break;
-    case "UPDATE":
-      break
-  }
-​
-  commitWork(fiber.child, fiber.stateNode as HTMLElement)
-  commitWork(fiber.sibling, parent)
-}
-
-function commitRoot(){
-  commitWork(wipRoot.child, wipRoot.containerInfo)
-  currentRoot = wipRoot
-  wipRoot = null
-}
-
-
-function wookLoop(){
-  if(nextUnitOfWork){
-    nextUnitOfWork = performUnitOfWork(
-      nextUnitOfWork
-    )
-    window.requestIdleCallback(wookLoop, { timeout: 1000/60 })
-  }
-  if(!nextUnitOfWork && wipRoot){
-    commitRoot()
-  }
-}
 
 export function render(element:React$Elemnt, container: HTMLElement){
-  wipRoot = {
-    containerInfo: container,
-    props: {
-      children: [element]
-    },
-    alternate: currentRoot //link old fiber
-  }
-  nextUnitOfWork = wipRoot
-  wookLoop()
+  updateContainer(element, container)
 }
 
 //#region window.requestIdleCallback
