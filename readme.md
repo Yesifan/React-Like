@@ -32,11 +32,14 @@ interface Fiber {
 
 `reconcileChildren`在生成`Fiber`时，若判断`type`是一个方法，则运行方法直到拿到真实dom的`type`去生成`fiber`。
 
+### Hooks - `useState`做了什么？
+在生成Fiber时，执行`useState`，通过`alternate`获取旧`Fiber`上的数据，判断是否为新，来决定是否使用`initial`。执行`setState`后，会将新的树压入更新堆栈，在下次执行`useState`时，就可以获取堆栈并执行。
+
 
 本库为了简单考虑，没有做任何性能上的优化。`Fiber`接口也是继承了`React$Elemnt`接口，以便于使用，使代码尽量简介易懂。
 
 ### 下一步
-Hooks
+保留Function Components的Fiber
 
 
 ## 参考
