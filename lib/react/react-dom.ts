@@ -1,12 +1,12 @@
 import { React$Elemnt } from '.'
-import { updateContainer } from './react-reconciler'
+import { Fiber, updateContainer } from './react-reconciler'
 
 const isEvent = (key:string) => key.startsWith("on")
 const isProperty = (key:string) =>
   key !== "children" && !isEvent(key)
 const isGone = (next:any) => (key:string) => !(key in next)
 const isNew = (prev:any, next:any) => (key:string) => prev[key] !== next[key]
-export function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
+function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any) {
   //Remove old or changed event listeners
   Object.keys(prevProps)
   .filter(isEvent)
@@ -34,7 +34,7 @@ export function updateDom(dom:HTMLElement|Text, prevProps:any={}, nextProps:any)
     .forEach(name => dom[name] = nextProps[name])
 }
 
-export function createDom(element:React$Elemnt):HTMLElement|Text{
+function createDom(element:React$Elemnt):HTMLElement|Text{
   const { type, props:{ children, ...props} } = element;
     const dom = type == "TEXT_ELEMENT"
       ? document.createTextNode("")
@@ -44,6 +44,32 @@ export function createDom(element:React$Elemnt):HTMLElement|Text{
     return dom
 }
 
+export function commitWork(fiber:Fiber, parent:HTMLElement){
+  if (!fiber) {
+    return
+  }
+  if (fiber.deletions) {
+    fiber.deletions.forEach(child => {
+      fiber.stateNode.removeChild(child.stateNode)
+    })
+  }
+  switch(fiber.effectTag){
+    case "PLACEMENT":
+      fiber.stateNode = createDom(fiber)
+      parent.append(fiber.stateNode)
+      break
+    case "UPDATE":
+      updateDom(
+        fiber.stateNode,
+        fiber.alternate?.props,
+        fiber.props
+      )
+      break;
+  }
+​
+  commitWork(fiber.child, fiber.stateNode as HTMLElement)
+  commitWork(fiber.sibling, parent)
+}
 
 export function render(element:React$Elemnt, container: HTMLElement){
   updateContainer(element, container)

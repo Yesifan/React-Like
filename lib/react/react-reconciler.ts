@@ -1,5 +1,10 @@
 import { React$Elemnt } from '.'
-import { createDom, updateDom } from './react-dom'
+import { commitWork } from './react-dom'
+
+interface UpdateQueue<T> {
+  state:T,
+  queue:((state: T)=>T)[]
+}
 
 export interface Fiber extends React$Elemnt{
   containerInfo?: HTMLElement
@@ -12,19 +17,29 @@ export interface Fiber extends React$Elemnt{
   sibling?: Fiber
   effectTag?: string
   deletions?: Fiber[]
+
+  hooks?:UpdateQueue<any>[]
 }
 
 export class Fiber {
   constructor({type, props}:React$Elemnt){
     this.type = type
     this.props = props
+    this.hooks = []
     if(type instanceof Function){
-      const element = type(props)
+      const element = type(props) // useState在被转换为Fiber时执行
       const newFiber = new Fiber(element);
       this.type = newFiber.type
       this.props = newFiber.props
     }
   }
+}
+
+let wipFiber:Fiber = null
+let hookIndex:number = null
+
+export function resolveDispatcher():[Fiber, number]{
+  return [wipFiber, hookIndex++]
 }
 
 /**
@@ -40,7 +55,10 @@ function reconcileChildren(fiber:Fiber){
   // 为孩子生成fiber
   while (index < elements.length||oldFiber) {
     const element = elements[index]
-    const newFiber = new Fiber(element);
+    const newFiber = new Fiber(element)
+
+    wipFiber = newFiber
+    hookIndex = 0
 
     const sameType = newFiber?.type === oldFiber?.type
     if (sameType) {
@@ -100,39 +118,13 @@ export function performUnitOfWork(fiber:Fiber){
 let wipRoot:Fiber
 let currentRoot:Fiber
 let nextUnitOfWork:Fiber
-function commitWork(fiber:Fiber, parent:HTMLElement){
-  if (!fiber) {
-    return
-  }
-  if (fiber.deletions) {
-    fiber.deletions.forEach(fiber => parent.removeChild(fiber.stateNode))
-  }
-  switch(fiber.effectTag){
-    case "PLACEMENT":
-      fiber.stateNode = createDom(fiber)
-      parent.append(fiber.stateNode)
-      break
-    case "UPDATE":
-      updateDom(
-        fiber.stateNode,
-        fiber.alternate?.props,
-        fiber.props
-      )
-      break;
-    case "UPDATE":
-      break
-  }
-​
-  commitWork(fiber.child, fiber.stateNode as HTMLElement)
-  commitWork(fiber.sibling, parent)
-}
+
 
 function commitRoot(){
   commitWork(wipRoot.child, wipRoot.containerInfo)
   currentRoot = wipRoot
   wipRoot = null
 }
-
 
 function wookLoop(){
   if(nextUnitOfWork){
@@ -146,15 +138,24 @@ function wookLoop(){
   }
 }
 
-export function updateContainer(element:Fiber, container:HTMLElement){
-  wipRoot = {
-    containerInfo: container,
-    props: {
-      children: [element]
-    },
-    alternate: currentRoot //link old fiber
+export function updateContainer(element?:Fiber, container?:HTMLElement){
+  if(element){
+    wipRoot = {
+      containerInfo: container,
+      props: {
+        children: [element]
+      },
+      alternate: currentRoot //link old fiber
+    }
+  }else{
+    //从根开始从新构建Fiber并与老Fiber进行对比
+    wipRoot = {
+      containerInfo: currentRoot.containerInfo,
+      props: currentRoot.props,
+      alternate: currentRoot //link old fiber
+    }
   }
   nextUnitOfWork = wipRoot
-
   wookLoop()
+  
 }
